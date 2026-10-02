@@ -1,0 +1,11 @@
+if {[catch {
+  vlog -sv src/*.sv
+} err]} {
+  puts "Compilation failed:"
+  puts $err
+  quit -code 1
+}
+
+vsim work.$1
+add wave -r /*
+run -all
