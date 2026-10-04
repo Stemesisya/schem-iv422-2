@@ -1,0 +1,33 @@
+# do sim tb 
+# Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+# -- Compiling module ram32x32
+# -- Compiling module ram64x32
+# -- Compiling module rom32x32
+# -- Compiling module tb
+# -- Compiling module testbench
+# ** Warning: src/testbanch64.sv(1): (vlog-2275) 'testbench' already exists and will be overwritten.
+# 
+# -- Compiling module testbench
+# 
+# Top level modules:
+# 	tb
+# 	testbench
+# vsim work.tb 
+# Loading sv_std.std
+# Loading work.tb
+# Loading work.ram64x32
+# Loading work.ram32x32
+# Loading work.rom32x32
+# 0G0;L=K5 7=0G5=8O X ?>4B25@645=K.
+# 0?8AL CA?5H=0, >AB0;L=K5 OG59:8 X.
+# 
+#  2
+# =8F80;870F8O RAM2 ?>4B25@645=0.
+# "2: >?8@>20=85 CA?5H=>, >AB0;L=K5 OG59:8 X.  2 +!
+# 
+#  3
+# !G8B0=> 87 #[2] 7=0G5=85: 00000055
+# >?8@>20=85 CA?5H=>, >AB0;L=K5 OG59:8 X.
+# 
+# ** Note: $finish    : src/tb.sv(157)
+#    Time: 324 ps  Iteration: 0  Instance: /tb
