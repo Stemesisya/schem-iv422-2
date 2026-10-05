@@ -1,46 +1,43 @@
-module testbench();
-logic clk, writeenable;
-logic [31:0] writedata, readdata;
-logic [5:0] dataadr, addrbuff;
-// instantiate device to be tested
-dmem mem (clk, writeenable, dataadr, writedata,
-readdata);
-//initialize test
-initial begin
-writeenable =0;
-writedata = 0;
-dataadr = 0;
-addrbuff = 0;
+module testbench64();
+  logic clk, writeenable;
+  logic [31:0] writedata, readdata;
+  logic [5:0] dataadr, addrbuff;
 
-end
-//generate clock to sequenc tests
-always begin
-clk <= 1; #5; clk<=0; #5;
-end
-//check results
-always @ (negedge clk) begin
-if (writeenable ==1) begin
-  $display ("RESULT: %b in %d", readdata, dataadr);
-  if (readdata != writedata) begin
-    $display ("readdata != writedata");
+  dmem mem (clk, writeenable, dataadr, writedata, readdata);
+
+  initial begin
+    writeenable =0;
+    writedata = 0;
+    dataadr = 0;
+    addrbuff = 0;
   end
-  writeenable =0;
-  if (dataadr >=63) begin
-    $stop;
+
+  always begin
+    clk <= 1; #5; clk<=0; #5;
   end
-  addrbuff = dataadr;
-  for (dataadr++; dataadr != 0; dataadr++) begin
-    #5
-    $display ("XXXXX?: %b in %d", readdata, dataadr);
-    if($isunknown(readdata))
-      $display("good job");
+
+  always @ (negedge clk) begin
+    if (writeenable ==1) begin
+
+      if (readdata != writedata)
+        $display ("%d: readdata != writedata", addrbuff);
+
+      writeenable =0;
+
+      if (dataadr >=63)
+        $stop;
+      
+      addrbuff = dataadr;
+      for (dataadr++; dataadr != 0; dataadr++) begin
+        #5
+        if(!$isunknown(readdata))
+          $display("%d: not XXXXX", addrbuff);
+      end
+      
+      dataadr <= addrbuff+1;
+    end else begin
+      writeenable = 1;
+      writedata = $urandom;
+    end
   end
-  
-  dataadr <= addrbuff+1;
-end else begin
-writeenable = 1;
-writedata = $urandom;
-$display ("%b in %d", writedata, dataadr);
-end
-end
 endmodule
