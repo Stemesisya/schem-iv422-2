@@ -8,11 +8,6 @@ module storage (
 
     logic [31:0] mem [31:0];
 
-    // Инициализация из файла
-    initial begin
-        $readmemh("memfile.dat", mem, 0, 31);
-    end
-
     assign rdata = mem[addr];
 
     always_ff @(posedge clk) begin

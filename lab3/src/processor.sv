@@ -1,14 +1,26 @@
 
 module processor(
-    input  logic clk
+    input logic reset,
+    input logic clk
 );
 
-logic PC[4:0];
-logic PCPlus4[4:0];
-logic instr[31:0];
+    logic [31:0] PC;
+    logic [31:0] PCPlus4;
+    logic [31:0] instr;
 
-assign PCPlus4 = PC + 4;
+    assign PCPlus4 = PC + 3'd4;
 
-storage instructions(clk, .we(0), .addr(PC), .wdata(1'x), .rdata(instr));
+    instr_memory instructions(
+        .clk(clk),
+        .addr(PC[6:2]),
+        .rdata(instr)
+    );
+
+    always_ff @(posedge clk) begin
+        if(reset == 1'b1)
+            PC <= 0;
+        else
+            PC <= PCPlus4;
+    end
 
 endmodule
