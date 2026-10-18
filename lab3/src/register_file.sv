@@ -8,7 +8,7 @@ module register_file (
     input  logic        we,
     
     input  logic [31:0] wd,
-    output logic [31:0] rd1
+    output logic [31:0] rd1,
     output logic [31:0] rd2
 );
 

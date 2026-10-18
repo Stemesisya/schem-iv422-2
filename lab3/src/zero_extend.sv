@@ -6,11 +6,14 @@ module zeroExtend(
 
 always_comb begin
     out = 32'b0;
-    out[31:11] = {20{in[24]}};
-    out[11:5] = in[24:18];
-    out[4:0] = in[4:0];
+    if(immSrc == 1'b1) begin
+        out[31:12] = {20{in[24]}};
+        out[11:5] = in[24:18];
+        out[4:0] = in[4:0];
+    end else begin
+        out[31:12] = {20{in[24]}};
+        out[11:0] = in[24:13];
+    end
 end
-
-assign out = (immSrc) ? 32'b0 | in[24:12] : 32'b0 | in[24:17] | in[];
 
 endmodule

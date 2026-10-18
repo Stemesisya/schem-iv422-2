@@ -5,10 +5,8 @@ module alu(
     output logic isZero, isNegative
 );
 
-    logic [3:0] b;
+    logic [31:0] b;
     assign b = funcsel[2]? ~rawb : rawb;
-
-    logic [3:0] sum;
 
     // funcsel values:
     // 000 A & B

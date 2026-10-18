@@ -13,7 +13,7 @@ module processor(
 
     instr_memory instructions(
         .clk   (clk    ),
-        .addr  (PC[6:2]),
+        .addr  (PC[9:2]),
         .rdata (instr  )
     );
 
@@ -23,12 +23,12 @@ module processor(
     logic       memWrite;
 
     controller controller(
-        .opcode     (instr[0:6]),
+        .opcode     (instr[6:0]),
         .regWrite   (regWrite  ),
         .memWrite   (memWrite  ),
         .aluControl (aluControl),
         .immSrc     (immSrc    )
-    )
+    );
 
     logic [31:0] reg1;
     logic [31:0] reg2;
@@ -43,7 +43,7 @@ module processor(
         .wd  (readData    ),
         .rd1 (reg1        ),
         .rd2 (reg2        )
-    )
+    );
 
     logic [31:0] signImm;
 
@@ -51,7 +51,7 @@ module processor(
         .in     (instr[31:7]),
         .immSrc (immSrc     ),
         .out    (signImm    )
-    )
+    );
 
     logic [31:0] aluResult;
     logic        zero;
@@ -64,15 +64,15 @@ module processor(
         .result     (aluResult ),
         .isZero     (zero      ),
         .isNegative (negative  )
-    )
+    );
 
     storage storage(
         .clk   (clk      ),
-        .addr  (aluResult),
+        .addr  (aluResult[6:2]),
         .wdata (reg2     ),
         .rdata (readData ),
         .we    (memWrite )
-    )
+    );
 
     always_ff @(posedge clk) begin
         if(reset == 1'b1)

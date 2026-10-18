@@ -1,3 +1,3 @@
-lw s3, 4(zero)
-lw s3, -12(s4)
-sw s1, 8(t1)
+lw s3, 32(zero)
+lw s1, 12(s3)
+sw s1, -4(s3)

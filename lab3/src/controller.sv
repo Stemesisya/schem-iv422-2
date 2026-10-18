@@ -27,7 +27,7 @@ module controller (
 
             OP_STORE: begin
                 regWrite = 0;
-                memWrite = 0;
+                memWrite = 1;
                 immSrc   = 1;
             end
         endcase

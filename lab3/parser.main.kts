@@ -121,6 +121,7 @@ class TypeS(op: Int): InstructionType("S", op) {
 		val base = OffsettedBase(list[1])
 		rs1 = base.base
 		imm = base.offset
+		println(imm.toUInt().toString(2))
 	}
 
 	override fun construct(): Int {
@@ -161,6 +162,7 @@ program.readLines().forEachIndexed { index, it ->
 
 	type.load(args)
 	val code: UInt = type.construct().toUInt()
+	println("#$currentLine: '$it' -> ${code.toString(2)}")
 	binary[currentLine] = code
 }
 
