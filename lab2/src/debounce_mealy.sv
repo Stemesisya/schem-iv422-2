@@ -1,4 +1,4 @@
-module debounce_mealy #(parameter int N = 3) (
+module debounce_mealy(
     input  logic clk,
     input  logic reset,
     input  logic in,
@@ -15,7 +15,7 @@ module debounce_mealy #(parameter int N = 3) (
     logic start_delay;
     logic done_delay;
 
-    delay #(.N(N)) u_delay (
+    timer u_delay (
         .clk   (clk),
         .reset (reset),
         .start (start_delay),

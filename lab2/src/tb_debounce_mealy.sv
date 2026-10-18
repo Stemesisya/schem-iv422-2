@@ -2,8 +2,7 @@
 
 module tb_debounce_mealy;
 
-    parameter int N = 2;
-    localparam int DELAY = (1 << N);
+    localparam int DELAY = (1 << 3);
 
     logic clk;
     logic reset;
@@ -12,7 +11,7 @@ module tb_debounce_mealy;
 
     int errors = 0;
 
-    debounce_mealy #(.N(N)) u_dut (
+    debounce_mealy u_dut (
         .clk   (clk),
         .reset (reset),
         .in    (in),
@@ -22,7 +21,7 @@ module tb_debounce_mealy;
     always #5 clk = ~clk;
 
     initial begin
-        $display("--- Тест автомата Мили (N=%0d) ---", N);
+        $display("--- Тест автомата Мили ---");
 
         clk = 0;
         reset = 1;
