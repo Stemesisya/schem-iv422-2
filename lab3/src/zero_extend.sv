@@ -1,6 +1,6 @@
 module zeroExtend(
     input logic [24:0] in,
-    input logic immsrc,
+    input logic immSrc,
     output logic [31:0] out
 );
 
@@ -11,6 +11,6 @@ always_comb begin
     out[4:0] = in[4:0];
 end
 
-assign out = (immsrc) ? 32'b0 | in[24:12] : 32'b0 | in[24:17] | in[];
+assign out = (immSrc) ? 32'b0 | in[24:12] : 32'b0 | in[24:17] | in[];
 
 endmodule

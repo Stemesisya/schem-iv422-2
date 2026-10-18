@@ -10,6 +10,10 @@ module storage (
 
     assign rdata = mem[addr];
 
+    initial begin
+        $readmemh("ram.dat", mem);
+    end
+
     always_ff @(posedge clk) begin
         if (we)
             mem[addr] <= wdata;
