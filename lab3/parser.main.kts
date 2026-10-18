@@ -137,7 +137,7 @@ class TypeS(op: Int): InstructionType("S", op) {
 
 val program = File("program.asm")
 
-val binary = Array(256) { 0 }
+val binary = Array(256) { 0U }
 
 program.readLines().forEachIndexed { index, it ->
 	currentLine = index
@@ -161,9 +161,16 @@ program.readLines().forEachIndexed { index, it ->
 
 	type.load(args)
 	val code: UInt = type.construct().toUInt()
-	println(code.toString(16))
-	println(code.toString(2))
+	binary[currentLine] = code
 }
+
+File("instructions.dat").writeText(
+	binary.joinToString("\n") { it
+		.toString(16)
+		.padStart(8, '0')
+	}
+)
+
 
 fun getRegister(regName: String): Int {
 	return Registers[regName] ?: throw CompilationException("unknown register: '$regName'")
