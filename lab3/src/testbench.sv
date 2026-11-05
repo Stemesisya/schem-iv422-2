@@ -56,8 +56,8 @@ module testbench();
         case (state)
         0: begin
             regAddr = 19; #1
-            if(regg != 32'hF)
-            $display("lw s3, 32(zero) : Incorrect register 's3' value:%h. Should be F", regg);
+            if(regg != 32'h10)
+            $display("lw s3, 32(zero) : Incorrect register 's3' value:%h. Should be 1F", regg);
         end
         1: begin
             regAddr = 9; #1
