@@ -6,32 +6,38 @@ import kotlin.system.exitProcess
 
 var currentLine = 0
 
-class CompilationException(string: String): IllegalArgumentException("Instruction #$currentLine: $string")
+class CompilationException(string: String) : IllegalArgumentException("Instruction #$currentLine: $string")
+
+fun getMask(n: Int) = ((1 shl n) - 1).toUInt()
+fun UInt.slice(lbound: Int, hbound: Int) = (this shr lbound) and getMask (hbound-lbound+1)
+fun UInt.slice(from: Int) = (this shr from) and 0x1U
 
 class OffsettedBase(string: String) {
 	companion object {
 		val pattern: Pattern = Pattern.compile("(-?\\d*)\\(([a-z0-9]*)\\)")
 	}
 
-	val offset: Int
-	val base: Int
+	val offset: UInt
+	val base: UInt
 
 	init {
 		val matcher = pattern.matcher(string)
-		if(!matcher.matches())
+		if (!matcher.matches())
 			throw CompilationException("invalid offsetted value '$string'")
-		offset = matcher.group(1).toInt()
+		offset = matcher.group(1).toInt().toUInt()
 		base = getRegister(matcher.group(2))
 
-		if(offset % 4 != 0)
+		if (offset % 4U != 0U)
 			throw CompilationException("Offset should be divisible by 4.")
 	}
 
 }
 
-val Registers = HashMap<String, Int>().apply {
-	var addr = 0
-	fun reg(name: String) { put(name, addr++) }
+val Registers = HashMap<String, UInt>().apply {
+	var addr = 0U
+	fun reg(name: String) {
+		put(name, addr++)
+	}
 
 	reg("zero")
 	reg("ra")
@@ -51,47 +57,53 @@ val Registers = HashMap<String, Int>().apply {
 }
 
 val Ops = HashMap<String, InstructionType>().apply {
-	put("lw", TypeI(0x03))
-	put("sw", TypeS(0x23))
+	put("lw", TypeI(0x03, 0x2U, 0x00U))
+	put("sw", TypeS(0x23, 0x2U, 0x00U))
+
+	put("add", TypeR(0x33, 0x0U, 0x00U))
+	put("sub", TypeR(0x33, 0x0U, 0x20U))
+	put("and", TypeR(0x33, 0x7U, 0x00U))
+	put("or", TypeR(0x33, 0x6U, 0x00U))
+	put("slt", TypeR(0x33, 0x2U, 0x00U))
+
+	put("beq", TypeB(0x63, 0x0U, 0x00U))
+	put("jal", TypeJ(0x6F, 0x0U, 0x00U))
 }
 
-abstract class InstructionType(val name: String, val op: Int) {
+abstract class InstructionType(val name: String, val op: Int, val funct3: UInt, val funct7: UInt) {
 	companion object {
 		const val RD_OFFSET = 7
-		const val IMM_4_0_OFFSET = 7
 		const val FUNC3_OFFSET = 12
+		const val FUNC7_OFFSET = 25
 		const val RS1_OFFSET = 15
 		const val RS2_OFFSET = 20
 		const val IMM_OFFSET = 20
-		const val IMM_11_5_OFFSET = 25
-
-		const val IMM_4_0_MASK = 0x1F
-		const val IMM_4_0_LEN = 5
 	}
 
-	var binary = 0
-	var func3 = 0x2
+	var binary = 0U
 
 	abstract fun load(list: List<String>)
 
-	open fun construct(): Int {
-		binary = op
-		binary = binary or (func3 shl FUNC3_OFFSET)
+	open fun construct(): UInt {
+		binary = op.toUInt()
+		binary = binary or (funct3 shl FUNC3_OFFSET)
+		binary = binary or (funct7 shl FUNC7_OFFSET)
+		println(binary.toString(2).padStart(32, '0'))
 		return binary
 	}
 
 	fun requireNArgs(args: List<String>, n: Int) {
-		if(args.size < n)
+		if (args.size < n)
 			throw CompilationException("not enough args for type '$name'. $n required")
-		else if(args.size > n)
+		else if (args.size > n)
 			throw CompilationException("too much args for type '$name'. $n required")
 	}
 }
 
-class TypeI(op: Int): InstructionType("I", op) {
-	var rd = 0
-	var rs1 = 0
-	var imm = 0
+class TypeI(op: Int, funct3: UInt, funct7: UInt) : InstructionType("I", op, funct3, funct7) {
+	var rd = 0U
+	var rs1 = 0U
+	var imm = 0U
 
 	override fun load(list: List<String>) {
 		requireNArgs(list, 2)
@@ -101,7 +113,7 @@ class TypeI(op: Int): InstructionType("I", op) {
 		imm = base.offset
 	}
 
-	override fun construct(): Int {
+	override fun construct(): UInt {
 		super.construct()
 		binary = binary or (rd shl RD_OFFSET)
 		binary = binary or (rs1 shl RS1_OFFSET)
@@ -110,10 +122,10 @@ class TypeI(op: Int): InstructionType("I", op) {
 	}
 }
 
-class TypeS(op: Int): InstructionType("S", op) {
-	var rs1 = 0
-	var rs2 = 0
-	var imm = 0
+class TypeS(op: Int, funct3: UInt, funct7: UInt) : InstructionType("S", op, funct3, funct7) {
+	var rs1 = 0U
+	var rs2 = 0U
+	var imm = 0U
 
 	override fun load(list: List<String>) {
 		requireNArgs(list, 2)
@@ -121,17 +133,86 @@ class TypeS(op: Int): InstructionType("S", op) {
 		val base = OffsettedBase(list[1])
 		rs1 = base.base
 		imm = base.offset
-		println(imm.toUInt().toString(2))
 	}
 
-	override fun construct(): Int {
+	override fun construct(): UInt {
 		super.construct()
 		binary = binary or (rs1 shl RS1_OFFSET)
 		binary = binary or (rs2 shl RS2_OFFSET)
-		val imm40 = imm and IMM_4_0_MASK
-		val imm115 = imm shr IMM_4_0_LEN
-		binary = binary or (imm40 shl IMM_4_0_OFFSET)
-		binary = binary or (imm115 shl IMM_11_5_OFFSET)
+		binary = binary or (imm.slice(0, 4) shl 7)
+		binary = binary or (imm.slice(5, 11) shl 25)
+		return binary
+	}
+}
+
+class TypeR(op: Int, funct3: UInt, funct7: UInt) : InstructionType("R", op, funct3, funct7) {
+	var rs1 = 0U
+	var rs2 = 0U
+	var rd = 0U
+
+	override fun load(list: List<String>) {
+		requireNArgs(list, 3)
+		rd = getRegister(list[0])
+		rs1 = getRegister(list[1])
+		rs2 = getRegister(list[2])
+	}
+
+	override fun construct(): UInt {
+		super.construct()
+		binary = binary or (rd shl RD_OFFSET)
+		binary = binary or (rs1 shl RS1_OFFSET)
+		binary = binary or (rs2 shl RS2_OFFSET)
+		return binary
+	}
+}
+
+class TypeB(op: Int, funct3: UInt, funct7: UInt) : InstructionType("R", op, funct3, funct7) {
+	var rs1 = 0U
+	var rs2 = 0U
+	var imm = 0U
+
+	override fun load(list: List<String>) {
+		requireNArgs(list, 3)
+		rs1 = getRegister(list[0])
+		rs2 = getRegister(list[1])
+		imm = list[2].toIntOrNull()?.toUInt() ?: throw CompilationException("Immediate should be a number")
+		if (imm % 4U != 0U)
+			throw CompilationException("Immediate should be divisible by 4.")
+	}
+
+	override fun construct(): UInt {
+		super.construct()
+		binary = binary or (rs1 shl RS1_OFFSET)
+		binary = binary or (rs2 shl RS2_OFFSET)
+		binary = binary or (imm.slice(11) shl 7)
+		binary = binary or (imm.slice(1, 4) shl 8)
+		binary = binary or (imm.slice(5, 10) shl 25)
+		println(imm.slice(12))
+		println(imm.toString(2))
+		binary = binary or (imm.slice(12) shl 31)
+		return binary
+	}
+}
+
+class TypeJ(op: Int, funct3: UInt, funct7: UInt) : InstructionType("R", op, funct3, funct7) {
+	var rd = 0U
+	var imm = 0U
+
+	override fun load(list: List<String>) {
+		requireNArgs(list, 2)
+		rd = getRegister(list[0])
+		imm = list[1].toUIntOrNull() ?: throw CompilationException("Immediate should be a number")
+		if (imm % 4U != 0U)
+			throw CompilationException("Immediate should be divisible by 4.")
+	}
+
+	override fun construct(): UInt {
+		super.construct()
+		binary = binary or (rd shl RD_OFFSET)
+		binary = binary or (imm.slice(12, 19) shl 12)
+		binary = binary or (imm.slice(11) shl 20)
+		binary = binary or (imm.slice(21, 30) shl 21)
+		binary = binary or (imm.slice(31) shl 31)
 		return binary
 	}
 }
@@ -151,7 +232,7 @@ program.readLines().forEachIndexed { index, it ->
 
 	val type = Ops[opStr]
 
-	if(type == null) {
+	if (type == null) {
 		println("Instruction #$index: unknown instruction: '$opStr'")
 		exitProcess(1)
 	}
@@ -161,19 +242,20 @@ program.readLines().forEachIndexed { index, it ->
 		.map { it.trim() }
 
 	type.load(args)
-	val code: UInt = type.construct().toUInt()
-	println("#$currentLine: '$it' -> ${code.toString(2)}")
+	val code = type.construct()
+	println("#$currentLine: '$it' -> (0x${code.toString(16).padStart(8, '0')}) ${code.toString(2).padStart(32, '0')}")
 	binary[currentLine] = code
 }
 
 File("instructions.dat").writeText(
-	binary.joinToString("\n") { it
-		.toString(16)
-		.padStart(8, '0')
+	binary.joinToString("\n") {
+		it
+			.toString(16)
+			.padStart(8, '0')
 	}
 )
 
 
-fun getRegister(regName: String): Int {
+fun getRegister(regName: String): UInt {
 	return Registers[regName] ?: throw CompilationException("unknown register: '$regName'")
 }

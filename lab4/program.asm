@@ -1,3 +1,6 @@
-lw s3, 32(zero)
-lw s1, 12(s3)
-sw s1, -4(s3)
+lw s3, 4(zero)
+lw s3, -12(s4)
+sw s1, 8(t1)
+add s0, t1, t2
+sub s5, t0, t6
+beq t0, zero, -8
