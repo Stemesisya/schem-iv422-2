@@ -5,8 +5,10 @@ module alu(
     output logic isZero, isNegative
 );
 
-    logic [31:0] b;
+    logic [31:0] b, sum, sltResult;
     assign b = funcsel[2]? ~rawb : rawb;
+    assign sum = funcsel[2]? a + b + 1 : a + b;
+    assign sltResult = 32'b0 | sum[31];
 
     // funcsel values:
     // 000 A & B
@@ -22,8 +24,8 @@ module alu(
         case (funcsel[1:0])
             2'b00: result = a & b;
             2'b01: result = a | b;
-            2'b10: result = funcsel[2]? a + b + 1 : a + b;
-            2'b11: result = funcsel[2]? /*TODO*/ 32'bx : 32'bx;
+            2'b10: result = sum;
+            2'b11: result = funcsel[2]? sltResult : 32'bx;
         endcase
 
         isZero = (result === 32'b0) ? 1'b1 : 0'b0;

@@ -9,8 +9,8 @@ module controller (
     output logic       memWrite,
     output logic [2:0] aluControl,
     output logic       aluSrc,
-    output logic       immSrc
-    output logic       regWrite,
+    output logic [1:0] immSrc,
+    output logic       regWrite
 );
 
     logic branch;

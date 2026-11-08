@@ -18,6 +18,8 @@ module processor(
         .rdata (instr  )
     );
 
+    logic        zero;
+
 	logic       PCSrc;
 	logic [1:0] resultSrc;
     logic       memWrite;
@@ -29,7 +31,8 @@ module processor(
     controller controller(
         .opcode     (instr[6:0]  ),
         .funct3     (instr[14:12]),
-        .funct7     (instr[30:0] ),
+        .funct7     (instr[31:25]),
+        .zero       (zero        ),
         .PCSrc      (PCSrc       ),
         .resultSrc  (resultSrc   ),
         .memWrite   (memWrite    ),
@@ -49,27 +52,26 @@ module processor(
         .rs2 (instr[24:20]),
         .rd  (instr[11:7] ),
         .we  (regWrite    ),
-        .wd  (readData    ),
-        .rd1 (rd1        ),
-        .rd2 (rd2        )
+        .wd  (result      ),
+        .rd1 (rd1         ),
+        .rd2 (rd2         )
     );
 
     logic [31:0] signImm;
 
     zeroExtend ze(
-        .in     (instr[31:7]),
-        .immSrc (immSrc     ),
-        .out    (signImm    )
+        .in     (instr   ),
+        .immSrc (immSrc  ),
+        .out    (signImm )
     );
 
     assign PCTarget = PC + signImm;
 
-    logic [31:0] srcB
+    logic [31:0] srcB;
     logic [31:0] aluResult;
-    logic        zero;
     logic        negative;
 
-    assign srcB = ALUSrc ? signImm : rd2
+    assign srcB = aluSrc ? signImm : rd2;
 
     alu alu(
         .a          (rd1       ),
@@ -90,13 +92,13 @@ module processor(
         .we    (memWrite )
     );
 
-    assign Result = ResultSrc == 0 ? aluResult : (resultSrc == 1 ? readData : PCPlus4 )
+    assign result = (resultSrc == 2'b0) ? aluResult : (resultSrc == 1 ? readData : PCPlus4 );
 
     always_ff @(posedge clk) begin
         if(reset == 1'b1)
             PC <= 0;
         else
-            PC <= PCSrc ? PCPlus4 : PCTarget;
+            PC <= PCSrc ? PCTarget : PCPlus4;
     end
 
 endmodule

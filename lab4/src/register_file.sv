@@ -14,10 +14,6 @@ module register_file (
 
     logic [31:0] regs [31:0];
 
-    initial
-        for (int i = 0; i < 32; i++)
-            regs[i] = 32'b0;
-
     assign rd1 = (rs1 == 0) ? 0 : regs[rs1];
     assign rd2 = (rs2 == 0) ? 0 : regs[rs2];
 
