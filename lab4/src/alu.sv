@@ -2,7 +2,7 @@ module alu(
     input logic [31:0] a, rawb,
     input logic [2:0] funcsel,
     output logic [31:0] result,
-    output logic isZero, isNegative
+    output logic isZero
 );
 
     logic [31:0] b, sum, sltResult;
@@ -29,7 +29,6 @@ module alu(
         endcase
 
         isZero = (result === 32'b0) ? 1'b1 : 0'b0;
-        isNegative = result[31];
     end
 
 endmodule

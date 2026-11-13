@@ -69,7 +69,6 @@ module processor(
 
     logic [31:0] srcB;
     logic [31:0] aluResult;
-    logic        negative;
 
     assign srcB = aluSrc ? signImm : rd2;
 
@@ -78,8 +77,7 @@ module processor(
         .rawb       (srcB      ),
         .funcsel    (aluControl),
         .result     (aluResult ),
-        .isZero     (zero      ),
-        .isNegative (negative  )
+        .isZero     (zero      )
     );
 
     logic [31:0] readData;
