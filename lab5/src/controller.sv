@@ -58,14 +58,14 @@ module controller (
         .immSrc (immSrc)
     );
 
-    always_ff @( posedge clk ) begin
+    always_ff @( posedge clk, posedge reset ) begin
         if (reset)
-            state <= 0;
+            state <= S0_FETCH;
         else
             state <= nextstate;
     end
     
-    always @( state ) begin
+    always_comb begin
         PCUpdate = 0;
         IRWrite  = 0;
         memWrite = 0;

@@ -108,10 +108,8 @@ module processor(
     always_ff @(posedge clk, posedge reset) begin
         if(reset == 1'b1)
             PC <= 0;
-        else if(PCWrite == 1'b1) begin
-            $display("Sasatttt PC: %d. reset: %d. Clk: %d", PC, reset, clk);
+        else if(PCWrite == 1'b1)
             PC <= result;
-        end
 
         if(IRWrite == 1'b1) begin
             oldPC <= PC;
