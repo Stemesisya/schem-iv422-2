@@ -39,6 +39,8 @@ module processor(
     logic       regWrite;
 
     controller controller(
+        .clk        (clk         ),
+        .reset      (reset       ),
         .opcode     (instr[6:0]  ),
         .funct3     (instr[14:12]),
         .funct7     (instr[31:25]),
@@ -59,15 +61,16 @@ module processor(
 
     logic [31:0] rd1;
     logic [31:0] rd2;
-	logic [31:0] result;
 
     register_file registers(
         .clk (clk         ),
         .rs1 (instr[19:15]),
         .rs2 (instr[24:20]),
         .rd  (instr[11:7] ),
+
         .we  (regWrite    ),
         .wd  (result      ),
+        
         .rd1 (rd1         ),
         .rd2 (rd2         )
     );
