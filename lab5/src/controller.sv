@@ -19,9 +19,21 @@ module controller (
     output logic       regWrite
 );
 
-    logic aluOp;
-    logic branch;
-    logic PCUpdate;
+    typedef enum logic [3:0] {
+        S0_FETCH,
+        S1_DECODE,
+        S2_MEMADR,
+        S3_MEMREAD,
+        S4_MEMWB,
+        S5_MEMWRITE,
+        S6_EXECUTER,
+        S7_ALUWB,
+        S10_BEQ
+    } statetype;
+
+    logic [1:0] aluOp;
+    logic       branch;
+    logic       PCUpdate;
 
     assign PCWrite = (zero & branch) | PCUpdate;
 
@@ -48,12 +60,12 @@ module controller (
 
     always_ff @( posedge clk ) begin
         if (reset)
-            state = 0;
+            state <= 0;
         else
-            state = nextstate;
+            state <= nextstate;
     end
     
-    always_comb begin
+    always @( state ) begin
         PCUpdate = 0;
         IRWrite  = 0;
         memWrite = 0;
@@ -61,7 +73,7 @@ module controller (
         branch   = 0;
 
         case (state)
-            0: begin // Fetch
+            S0_FETCH: begin
                 addrSrc   = 0;
                 IRWrite   = 1;
                 aluSrcA   = 2'b00;
@@ -69,64 +81,64 @@ module controller (
                 aluOp     = 2'b00;
                 resultSrc = 2'b10;
                 PCUpdate  = 1;
-                nextstate = 1;
+                nextstate = S1_DECODE;
             end
-            1: begin // Decode
+            S1_DECODE: begin
                 aluSrcA   = 2'b01;
                 aluSrcB   = 2'b01;
                 aluOp     = 2'b00;
                 case(opcode)
                     OP_LOAD, OP_STORE:
-                        nextstate = 2;
+                        nextstate = S2_MEMADR;
                     R_FUNC:
-                        nextstate = 6;
+                        nextstate = S6_EXECUTER;
                     OP_BREQ:
-                        nextstate = 10;
+                        nextstate = S10_BEQ;
                 endcase
             end
-            2: begin // MemAddr
+            S2_MEMADR: begin
                 aluSrcA   = 2'b10;
                 aluSrcB   = 2'b01;
                 aluOp     = 2'b00;
                 if(opcode == OP_LOAD)
-                    nextstate = 3;
+                    nextstate = S3_MEMREAD;
                 else
-                    nextstate = 5;
+                    nextstate = S5_MEMWRITE;
             end
-            3: begin // MemRead
+            S3_MEMREAD: begin
                 resultSrc = 2'b00;
                 addrSrc   = 1;
-                nextstate = 4;
+                nextstate = S4_MEMWB;
             end
-            4: begin // MemWB
+            S4_MEMWB: begin
                 resultSrc = 2'b01;
                 regWrite  = 1;
-                nextstate = 0;
+                nextstate = S0_FETCH;
             end
-            5: begin // MemWrite
+            S5_MEMWRITE: begin
                 resultSrc = 2'b00;
                 addrSrc   = 1;
                 memWrite  = 1;
-                nextstate = 0;
+                nextstate = S0_FETCH;
             end
-            6: begin // ExecuteR
+            S6_EXECUTER: begin
                 aluSrcA   = 2'b10;
                 aluSrcB   = 2'b00;
                 aluOp     = 2'b10;
-                nextstate = 7;
+                nextstate = S7_ALUWB;
             end
-            7: begin // ALUWB
+            S7_ALUWB: begin
                 resultSrc = 2'b00;
                 regWrite  = 1;
-                nextstate = 0;
+                nextstate = S0_FETCH;
             end
-            10: begin // BEQ
+            S10_BEQ: begin
                 aluSrcA   = 2'b10;
                 aluSrcB   = 2'b00;
                 aluOp     = 2'b01;
                 resultSrc = 2'b00;
                 branch    = 1;
-                nextstate = 0;
+                nextstate = S0_FETCH;
             end
         endcase
     end
@@ -149,8 +161,8 @@ module aluDecoder(
 
     always_comb begin
         case(aluOp)
-            2'b00: aluControl = 3'b000;
-            2'b01: aluControl = 3'b100;
+            2'b00: aluControl = 3'b010;
+            2'b01: aluControl = 3'b110;
             2'b10: begin
                 case (funct3)
                     3'h0: aluControl = funct7 == 7'h0 ? ALU_ADD : ALU_SUB;
@@ -165,7 +177,7 @@ endmodule
 
 module opDecoder(
     input  logic [6:0] opcode,
-    output logic [1:0] immSrc,
+    output logic [1:0] immSrc
 );
 
     localparam logic [6:0] R_FUNC = 7'h33;

@@ -14,7 +14,7 @@ module processor(
     logic [31:0] PC;
 
     logic [31:0] addr;
-    assign addr = addrSrc == 1'b1? result : PC;
+    assign addr = addrSrc == 1? result : PC;
     
     logic [31:0] readData;
     logic [31:0] writeData;
@@ -77,7 +77,7 @@ module processor(
 
     logic [31:0] a;
     logic [31:0] srcA;
-    assign srcA = aluSrcA == 2'b00 ? pc : (aluSrcA == 2'b01? oldPC : a);
+    assign srcA = aluSrcA == 0 ? PC : ((aluSrcA == 1) ? oldPC : a);
 
     logic [31:0] immExt;
 
@@ -87,8 +87,8 @@ module processor(
         .out    (immExt )
     );
 
-    logic srcB [31:0];
-    assign srcB = aluSrcB == 2'b00? writeData : (aluSrcB == 2'b01? immExt : 32'b100);
+    logic [31:0] srcB;
+    assign srcB = aluSrcB == 0? writeData : ((aluSrcB == 1) ? immExt : 32'd4);
 
     logic [31:0] aluResult;
 
@@ -103,13 +103,15 @@ module processor(
 
     logic [31:0] aluOut;
 
-    assign result = resultSrc == 2'b00? aluOut : (resultSrc == 2'b01? data : aluResult);
+    assign result = resultSrc == 0 ? aluOut : ((resultSrc == 1) ? data : aluResult);
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk, posedge reset) begin
         if(reset == 1'b1)
             PC <= 0;
-        else if(PCWrite == 1'b1)
+        else if(PCWrite == 1'b1) begin
+            $display("Sasatttt PC: %d. reset: %d. Clk: %d", PC, reset, clk);
             PC <= result;
+        end
 
         if(IRWrite == 1'b1) begin
             oldPC <= PC;

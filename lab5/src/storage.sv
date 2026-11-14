@@ -1,17 +1,17 @@
 module storage (
     input  logic        clk,
     input  logic        we,
-    input  logic [4:0]  addr,
+    input  logic [7:0]  addr,
     input  logic [31:0] wdata,
     output logic [31:0] rdata
 );
 
-    logic [31:0] mem [31:0];
+    logic [31:0] mem [256:0];
 
     assign rdata = mem[addr];
 
     initial begin
-        $readmemh("ram.dat", mem);
+        $readmemh("instructions.dat", mem);
     end
 
     always_ff @(posedge clk) begin
